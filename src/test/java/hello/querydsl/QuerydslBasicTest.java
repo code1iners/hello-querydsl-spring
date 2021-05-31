@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 
+import static hello.querydsl.entity.QMember.*;
 import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
@@ -63,14 +64,12 @@ public class QuerydslBasicTest {
     @Test
     public void querydsl() throws Exception {
         // given
-        QMember m = QMember.member;
-        m = new QMember("m"); // note. Same way above.
 
         // when
         Member foundMember = queryFactory
-                .select(m)
-                .from(m)
-                .where(m.username.eq("member1"))
+                .select(member)
+                .from(member)
+                .where(member.username.eq("member1"))
                 .fetchOne();
 
         // then
