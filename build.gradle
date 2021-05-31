@@ -31,6 +31,7 @@ dependencies {
 
 	// note. Querydsl
 	implementation 'com.querydsl:querydsl-jpa'
+	implementation 'com.querydsl:querydsl-apt'
 }
 
 test {
