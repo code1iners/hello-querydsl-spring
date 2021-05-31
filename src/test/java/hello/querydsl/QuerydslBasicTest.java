@@ -1,0 +1,153 @@
+package hello.querydsl;
+
+import com.querydsl.core.QueryResults;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import hello.querydsl.entity.Member;
+import hello.querydsl.entity.QMember;
+import hello.querydsl.entity.Team;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityManager;
+
+import java.util.List;
+
+import static hello.querydsl.entity.QMember.*;
+import static org.assertj.core.api.Assertions.*;
+
+@SpringBootTest
+@Transactional
+public class QuerydslBasicTest {
+
+    @Autowired EntityManager em;
+    JPAQueryFactory queryFactory;
+
+    @BeforeEach
+    public void before() {
+        queryFactory = new JPAQueryFactory(em);
+
+        Team team1 = new Team("team1");
+        Team team2 = new Team("team2");
+        em.persist(team1);
+        em.persist(team2);
+
+        Member member1 = new Member("member1", 10, team1);
+        Member member2 = new Member("member2", 20, team1);
+        Member member3 = new Member("member3", 30, team2);
+        Member member4 = new Member("member4", 40, team2);
+        em.persist(member1);
+        em.persist(member2);
+        em.persist(member3);
+        em.persist(member4);
+    }
+
+    /**
+     * <h3>Jpql.</h3>
+     */
+    @Test
+    public void jpql() throws Exception {
+        // given
+
+        // when
+        Member foundMemberByJpql = em.createQuery("select m From Member m where m.username = :username", Member.class)
+                .setParameter("username", "member1")
+                .getSingleResult();
+
+        // then
+        assertThat(foundMemberByJpql.getUsername()).isEqualTo("member1");
+    }
+
+    /**
+     * <h3>Querydsl.</h3>
+     */
+    @Test
+    public void querydsl() throws Exception {
+        // given
+
+        // when
+        Member foundMember = queryFactory
+                .select(member)
+                .from(member)
+                .where(member.username.eq("member1"))
+                .fetchOne();
+
+        // then
+        assertThat(foundMember.getUsername()).isEqualTo("member1");
+    }
+
+    /**
+     * <h3>Search</h3>
+     * <p>Search by conditions.</p>
+     */
+    @Test
+    public void search() throws Exception {
+        // given
+        Member foundMember = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1")
+                        .and(member.age.between(10, 30)))
+                .fetchOne();
+        // when
+
+        // then
+        assertThat(foundMember.getUsername()).isEqualTo("member1");
+    }
+
+    /**
+     * <h3>Search with params.</h3>
+     */
+    @Test
+    public void searchWithParams() throws Exception {
+        // given
+
+        // when
+        Member foundMember = queryFactory
+                .selectFrom(member)
+                .where(
+                        member.username.eq("member1"),
+                        member.age.eq(10)
+                )
+                .fetchOne();
+
+        // then
+        assertThat(foundMember.getUsername()).isEqualTo("member1");
+    }
+
+    /**
+     * <h3>Fetch.</h3>
+     */
+    @Test
+    public void fetch() throws Exception {
+        // given
+
+        // when
+//        List<Member> fetch = queryFactory
+//                .selectFrom(member)
+//                .fetch();
+//
+//        Member fetchOne = queryFactory
+//                .selectFrom(member)
+//                .fetchOne();
+//
+//        Member fetchFirst = queryFactory
+//                .selectFrom(member)
+//                .fetchFirst();
+
+//        QueryResults<Member> fetchResults = queryFactory
+//                .selectFrom(member)
+//                .fetchResults();
+//        long total = fetchResults.getTotal();
+//        List<Member> content = fetchResults.getResults();
+
+        long onlyTotal = queryFactory
+                .selectFrom(member)
+                .fetchCount();
+
+        // then
+    }
+
+}
